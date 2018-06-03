@@ -5,11 +5,17 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextClock;
+import android.widget.TextView;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.StringReader;
+import java.lang.reflect.Method;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -71,19 +77,37 @@ public class XposedModule implements IXposedHookLoadPackage {
         try{
             hookclass = cl.loadClass("com.tencent.mm.plugin.luckymoney.ui.i");
             XposedBridge.log("finded in " + processName);
-            XposedHelpers.findAndHookMethod(hookclass, "sJ", int.class, new XC_MethodHook() {
+            XposedHelpers.findAndHookMethod(hookclass, "getView", int.class, View.class, ViewGroup.class, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    Object obj = param.getResult();
-                    Object owJ = obj.getClass().getField("owJ").get(obj);
-                    Object oxf = obj.getClass().getField("oxf").get(obj);
-                    Object userName = obj.getClass().getField("userName").get(obj);
+                    //反射调用sJ方法
+                    int index = (Integer)param.args[0];
+                    Object obj = param.thisObject;
+                    Method method = obj.getClass().getDeclaredMethod("sJ", int.class);
+                    method.setAccessible(true);
+                    Object itemObj = method.invoke(obj, index);
+                    Object owJ = itemObj.getClass().getField("owJ").get(itemObj);
+                    Object oxf = itemObj.getClass().getField("oxf").get(itemObj);
+                    Object userName = itemObj.getClass().getField("userName").get(itemObj);
+
                     String sendId = owJ.toString().substring(13);
                     String revTime = oxf.toString();
+                    String sendTime = SP.getString(sendId, "error");
+                    long costTime = Long.parseLong(revTime)-Long.parseLong(sendTime);
 
                     XposedBridge.log("WXField-" + "sendId:" + sendId); // sendId
                     XposedBridge.log("WXField-" + "revTime:" + revTime); // 领取时间
-                    XposedBridge.log("WXField-" + "sendTime:" + SP.getString(sendId, "error"));
+                    XposedBridge.log("WXField-" + "sendTime:" + sendTime); //发红包时间
+                    XposedBridge.log("WXField-" + "costTime:" + Long.toString(costTime)); //花费时间
+
+                    //修改view
+                    Object result = param.getResult();
+                    if(result instanceof LinearLayout){
+                        LinearLayout itemView = (LinearLayout)result;
+                        LinearLayout leftLayout = (LinearLayout)itemView.getChildAt(1);
+                        TextView timetext = (TextView)leftLayout.getChildAt(3);
+                        timetext.setTextColor(0xFFFF0000);
+                    }
                     super.afterHookedMethod(param);
                 }
             });
