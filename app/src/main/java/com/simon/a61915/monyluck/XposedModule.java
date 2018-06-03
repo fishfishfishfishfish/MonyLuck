@@ -157,7 +157,7 @@ public class XposedModule implements IXposedHookLoadPackage {
             tv.setText("用时小于5s, 可能用了挂!");
         }else{
             tv.setTextColor(0xFF00FF00);
-            tv.setText("用时:" + Long.toString(costTime) + "s.");
+            tv.setText("用时:" + Long.toString(costTime) + "s. ");
         }
     }
 }
