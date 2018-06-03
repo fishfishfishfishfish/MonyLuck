@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">MonyLuck</string>
+    <string name="less1s">用时小于1s, 厉害!</string>
+    <string name="less2s">用时小于2s, 还行!</string>
+    <string name="less5s">用时小于5s, 可能用了挂!</string>
 </resources>

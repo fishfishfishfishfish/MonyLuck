@@ -106,7 +106,7 @@ public class XposedModule implements IXposedHookLoadPackage {
                         LinearLayout itemView = (LinearLayout)result;
                         LinearLayout leftLayout = (LinearLayout)itemView.getChildAt(1);
                         TextView timetext = (TextView)leftLayout.getChildAt(3);
-                        timetext.setTextColor(0xFFFF0000);
+                        modifyTimeText(timetext, costTime);
                     }
                     super.afterHookedMethod(param);
                 }
@@ -144,5 +144,20 @@ public class XposedModule implements IXposedHookLoadPackage {
         SharedPreferences.Editor SPEdit = SP.edit();
         SPEdit.putString(sendId, createTime);
         SPEdit.apply();
+    }
+    private static void modifyTimeText(TextView tv, long costTime){
+        if(costTime < 1){
+            tv.setTextColor(0xFFFF0000);
+            tv.setText("用时小于1s, 厉害!");
+        }else if(costTime < 2) {
+            tv.setTextColor(0xFF0000FF);
+            tv.setText("用时小于2s, 还行!");
+        }else if(costTime < 5){
+            tv.setTextColor(0xFFFF8C00);
+            tv.setText("用时小于5s, 可能用了挂!");
+        }else{
+            tv.setTextColor(0xFF00FF00);
+            tv.setText("用时:" + Long.toString(costTime) + "s.");
+        }
     }
 }
